@@ -7,8 +7,15 @@
     <string name="titulo_fecha_hora">Fecha y hora</string>
     <string name="titulo_fecha">Fecha</string>
     <string name="titulo_hora">Hora</string>
+    <string name="titulo_tiempo_estimado">Tiempo estimado</string>
+    <string name="titulo_asientos">Asientos</string>
     <string name="title_activity_login">Sign in</string>
     <string name="crear_viaje">Crear viaje</string>
+    <string name="escalas">Escalas</string>
+    <string name="recoger">Puntos de recogida</string>
+    <string name="agregar_escala">Agregar escala</string>
+    <string name="agregar_recoger">Agregar punto</string>
+    <string name="nombre_viaje">Elige el nombre de tu viaje</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -23,4 +30,8 @@
         completions."
     </string>
     <string name="title_activity_nuevo_viaje">NuevoViaje</string>
+
+
+    <string name="error_no_internet">Se requiere conexión a internet para utilizar los servicios de Google</string>
+    <string name="error_desconocido">Ocurrío un error desconocido, intenta nuevamente</string>
 </resources>

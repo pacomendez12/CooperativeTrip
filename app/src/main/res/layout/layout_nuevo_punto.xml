@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:animateLayoutChanges="true"
+    >
+
+    <EditText
+        android:id="@+id/et_punto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_margin="10dp"
+        android:paddingLeft="10dp"
+        android:hint="Punto de ruta"
+        android:focusable="false"
+        android:textColor="#444" />
+    <ImageButton
+        android:id="@+id/btn_eliminar_punto"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:foregroundGravity="center"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/close_red"/>
+
+</LinearLayout>

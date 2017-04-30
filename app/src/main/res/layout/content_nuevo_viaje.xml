@@ -7,7 +7,9 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="mx.iteso.pam2017.a705164.cooperativetrip.NuevoViaje"
-    tools:showIn="@layout/activity_nuevo_viaje">
+    tools:showIn="@layout/activity_nuevo_viaje"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp">
 
 
     <ScrollView
@@ -27,25 +29,31 @@
                 android:paddingTop="20dp"
                 />
 
+            <EditText
+                android:id="@+id/nombre_viaje"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/nombre_viaje"/>
+
             <TextView
                 android:id="@+id/tv_origen"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
-                android:layout_marginLeft="55dp"
+                android:layout_marginLeft="25dp"
                 android:text="@string/salida"
-                android:visibility="invisible"/>
-            <EditText
+                android:visibility="visible"/>
+            <!--<EditText
                 android:id="@+id/et_origen"
                 android:layout_width="match_parent"
                 android:layout_height="45dp"
                 android:hint="@string/salida"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="25dp"
-                android:paddingLeft="25dp"/>
+                android:paddingLeft="25dp"/>-->
 
             <fragment
-                android:id="@+id/place_autocomplete_fragment"
+                android:id="@+id/place_autocomplete_fragment_origen"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
@@ -57,17 +65,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
-                android:layout_marginLeft="55dp"
+                android:layout_marginLeft="25dp"
                 android:text="@string/destino"
-                android:visibility="invisible"/>
-            <EditText
+                android:visibility="visible"/>
+            <!--<EditText
                 android:id="@+id/ed_destino"
                 android:layout_width="match_parent"
                 android:layout_height="45dp"
                 android:hint="@string/destino"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="25dp"
-                android:paddingLeft="25dp"/>
+                android:paddingLeft="25dp"/>-->
+
+            <fragment
+                android:id="@+id/place_autocomplete_fragment_destino"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+                />
 
             <View
                 android:paddingTop="15dp"
@@ -83,35 +98,90 @@
 
                 />
 
-            <EditText
-                android:id="@+id/et_fecha"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/titulo_fecha"
-                android:textAlignment="viewEnd"
-                android:paddingRight="25dp"
-                android:paddingTop="20dp"
-                android:layout_marginLeft="250dp"
-                android:focusable="false"
-                android:onClick="openDatePicker"/>
+                android:orientation="horizontal">
+                <EditText
+                    android:id="@+id/et_fecha"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:hint="@string/titulo_fecha"
+                    android:textAlignment="viewEnd"
+                    android:layout_marginRight="10dp"
+                    android:paddingRight="25dp"
+                    android:paddingTop="20dp"
+                    android:focusable="false"
+                    android:onClick="openDatePicker"/>
 
-            <EditText
-                android:id="@+id/et_hora"
+                <EditText
+                    android:id="@+id/et_hora"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:hint="@string/titulo_hora"
+                    android:textAlignment="viewEnd"
+                    android:layout_marginRight="10dp"
+                    android:paddingRight="25dp"
+                    android:paddingTop="20dp"
+                    android:focusable="false" />
+            </LinearLayout>
+
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/titulo_hora"
-                android:textAlignment="viewEnd"
-                android:paddingRight="25dp"
-                android:paddingTop="20dp"
-                android:focusable="false"
-                android:layout_marginLeft="250dp"/>
+                android:orientation="horizontal"
+                >
+                <TextView
+                    android:id="@+id/tv_asientos"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.6"
+                    android:layout_gravity="center"
+                    android:gravity="right"
+                    android:paddingRight="20dp"
+                    android:visibility="invisible"
+                    android:text="@string/titulo_asientos"/>
+
+                <EditText
+                    android:id="@+id/et_asientos"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.4"
+                    android:hint="@string/titulo_asientos"
+                    android:textAlignment="viewEnd"
+                    android:layout_marginRight="10dp"
+                    android:paddingRight="25dp"
+                    android:paddingTop="20dp"
+                    android:focusable="false"
+                    android:onClick="showNumberPicker"/>
+            </LinearLayout>
+
+
+            <!-- los otros layouts -->
+            <View
+                android:paddingTop="15dp"
+                android:paddingBottom="15dp"
+                style="@style/Divider"/>
+            <!-- los otros layouts -->
+            <include layout="@layout/layout_escalas"/>
+
+            <View
+                android:paddingTop="15dp"
+                android:paddingBottom="15dp"
+                style="@style/Divider"/>
+
+            <include layout="@layout/layout_pick_up_points"/>
 
             <Button
                 android:id="@+id/btn_guardar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="25dp"
-                android:text="@string/crear_viaje"/>
+                android:text="@string/crear_viaje"
+                android:onClick="crearViaje"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

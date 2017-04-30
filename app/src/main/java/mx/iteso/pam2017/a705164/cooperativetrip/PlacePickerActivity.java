@@ -18,13 +18,16 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
 
-public class PlacePickerActivity extends AppCompatActivity {
+public class PlacePickerActivity extends Activity {
     private static final int PLACE_PICKER_REQUEST = 1;
+
     private TextView mName;
     private TextView mAddress;
     private TextView mAttributions;
     private static final LatLngBounds BOUNDS_MOUNTAIN_VIEW = new LatLngBounds(
             new LatLng(37.398160, -122.180831), new LatLng(37.430610, -121.972090));
+    private Place lastPlace;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +43,35 @@ public class PlacePickerActivity extends AppCompatActivity {
                 try {
                     PlacePicker.IntentBuilder intentBuilder =
                             new PlacePicker.IntentBuilder();
-                    intentBuilder.setLatLngBounds(BOUNDS_MOUNTAIN_VIEW);
+                    if (lastPlace == null) {
+                        double radiusDegrees = 0.25;
+                        GPSHelper gps = new GPSHelper(PlacePickerActivity.this);
+                        gps.getMyLocation();
+                        LatLng center = new LatLng(gps.getLatitude(), gps.getLongitude());
+                        LatLng northEast = new LatLng(center.latitude + radiusDegrees, center.longitude + radiusDegrees);
+                        LatLng southWest = new LatLng(center.latitude - radiusDegrees, center.longitude - radiusDegrees);
+                        LatLngBounds bounds = LatLngBounds.builder()
+                                .include(northEast)
+                                .include(southWest)
+                                .build();
+                        if (gps.getLongitude() == 0 && gps.getLongitude() == 0)
+                            intentBuilder.setLatLngBounds(BOUNDS_MOUNTAIN_VIEW);
+                        else
+                            intentBuilder.setLatLngBounds(bounds);
+                    } else {
+                        // usar la ultima seleccion
+                        double radiusDegrees = 0.10;
+
+                        LatLng center = new LatLng(lastPlace.getLatLng().latitude, lastPlace.getLatLng().longitude);
+                        LatLng northEast = new LatLng(center.latitude + radiusDegrees, center.longitude + radiusDegrees);
+                        LatLng southWest = new LatLng(center.latitude - radiusDegrees, center.longitude - radiusDegrees);
+                        LatLngBounds bounds = LatLngBounds.builder()
+                                .include(northEast)
+                                .include(southWest)
+                                .build();
+                        intentBuilder.setLatLngBounds(bounds);
+                    }
+
                     Intent intent = intentBuilder.build(PlacePickerActivity.this);
                     startActivityForResult(intent, PLACE_PICKER_REQUEST);
 
@@ -50,6 +81,7 @@ public class PlacePickerActivity extends AppCompatActivity {
                 }
             }
         });
+
     }
 
     @Override
@@ -60,6 +92,7 @@ public class PlacePickerActivity extends AppCompatActivity {
                 && resultCode == Activity.RESULT_OK) {
 
             final Place place = PlacePicker.getPlace(this, data);
+            lastPlace = place;
             final CharSequence name = place.getName();
             final CharSequence address = place.getAddress();
             String attributions = (String) place.getAttributions();
