@@ -20,20 +20,22 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/titulo_nuevo_viaje"
-                android:textSize="25sp"
-                android:textAlignment="center"
-                android:paddingTop="20dp"
-                />
-
             <EditText
                 android:id="@+id/nombre_viaje"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingLeft="20dp"
                 android:hint="@string/nombre_viaje"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/titulo_nuevo_viaje"
+                android:textSize="20sp"
+                android:textAlignment="center"
+                android:paddingTop="20dp"
+                />
+
 
             <TextView
                 android:id="@+id/tv_origen"
@@ -93,7 +95,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/titulo_fecha_hora"
-                android:textSize="25sp"
+                android:textSize="20sp"
                 android:textAlignment="center"
 
                 />
@@ -128,7 +130,58 @@
                     android:focusable="false" />
             </LinearLayout>
 
+            <TextView
+                android:layout_marginTop="10dp"
+                android:text="@string/titulo_elije_vehiculo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+            <Spinner
+                android:id="@+id/spinner_vehiculo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            </Spinner>
 
+
+
+            <View
+                android:paddingTop="15dp"
+                android:paddingBottom="15dp"
+                style="@style/Divider"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/titulo_precio"
+                android:textSize="20sp"
+                android:textAlignment="center"
+                />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <EditText
+                    android:id="@+id/et_precio"
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/tv_precio_"
+                    android:layout_alignParentLeft="false"
+                    android:layout_weight="1"
+                    android:hint="@string/titulo_precio"
+                    android:textAlignment="viewEnd"
+                    android:layout_marginRight="10dp"
+                    android:digits="0123456789."
+                    android:inputType="numberDecimal"
+                    android:paddingTop="20dp"
+                    />
+                <TextView
+                    android:id="@+id/tv_precio_"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:paddingTop="23dp"
+                    android:text="MXN"/>
+            </RelativeLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -152,12 +205,13 @@
                     android:layout_weight="0.4"
                     android:hint="@string/titulo_asientos"
                     android:textAlignment="viewEnd"
-                    android:layout_marginRight="10dp"
-                    android:paddingRight="25dp"
+                    android:layout_marginRight="60dp"
+                    android:paddingRight="10dp"
                     android:paddingTop="20dp"
                     android:focusable="false"
                     android:onClick="showNumberPicker"/>
             </LinearLayout>
+
 
 
             <!-- los otros layouts -->

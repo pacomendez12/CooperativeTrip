@@ -10,7 +10,6 @@
         android:layout_height="wrap_content"
         android:text="@string/recoger"
         android:textSize="20sp"
-        android:textColor="#000"
         android:textAlignment="center" />
 
     <Button

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_mis_viajes"
+            android:icon="@drawable/ic_menu_car"
+            android:title="Mis viajes" />
+        <item
+            android:id="@+id/nav_buscar_viajes"
+            android:icon="@drawable/ic_menu_magnify"
+            android:title="Buscar viajes" />
+        <item
+            android:id="@+id/nav_nuevo_viaje"
+            android:icon="@drawable/ic_menu_plus"
+            android:title="Nuevo viaje" />
+
+    </group>
+
+    <item android:title="Usuario">
+        <menu>
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/ic_menu_logout"
+                android:title="Log out" />
+            <item
+                android:id="@+id/nav_ayuda"
+                android:icon="@drawable/ic_menu_help"
+                android:title="Ayuda" />
+        </menu>
+    </item>
+
+</menu>

@@ -1,6 +1,12 @@
 package mx.iteso.pam2017.a705164.cooperativetrip;
 
+import android.content.Context;
+
 import com.loopj.android.http.*;
+
+import cz.msebera.android.httpclient.HttpEntity;
+import cz.msebera.android.httpclient.entity.StringEntity;
+
 /**
  * Created by paco on 29/04/2017.
  */
@@ -17,7 +23,12 @@ public class RestClient {
     }
 
     public static void post(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
+        client.addHeader("Authorization", AuthenticationManager.getKey());
         client.post(getAbsoluteUrl(url), params, responseHandler);
+    }
+
+    public static void post(Context contex, String url, StringEntity entity, AsyncHttpResponseHandler responseHandler) {
+        client.post(contex, url, entity, "application/json", responseHandler);
     }
 
     private static String getAbsoluteUrl(String relativeUrl) {

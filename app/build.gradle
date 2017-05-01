@@ -28,18 +28,19 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    //compile 'com.google.android.gms:play-services:10.2.4'
+    //
+//    compile 'com.android.support:customtabs:25.3.1'
     compile 'com.android.support:support-core-utils:25.3.1'
     compile 'com.android.support:mediarouter-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.google.android.gms:play-services-maps:10.2.4'
-    //compile 'com.google.android.gms:play-services:10.2.4'
     compile 'com.google.android.gms:play-services-places:10.2.4'
-    testCompile 'junit:junit:4.12'
-//
-//    compile 'com.android.support:customtabs:25.3.1'
     compile 'com.google.firebase:firebase-core:10.2.1'
     compile 'com.google.firebase:firebase-messaging:10.2.1'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.loopj.android:android-async-http:1.4.9'
+    compile 'com.android.support.constraint:constraint-layout:1.0.1'
+    testCompile 'junit:junit:4.12'
 }

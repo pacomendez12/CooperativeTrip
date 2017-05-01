@@ -1,7 +1,6 @@
 package mx.iteso.pam2017.a705164.cooperativetrip;
 import android.app.Activity;
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,17 +8,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -27,31 +27,36 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import cz.msebera.android.httpclient.Header;
+import cz.msebera.android.httpclient.HttpEntity;
+import cz.msebera.android.httpclient.entity.ByteArrayEntity;
+import cz.msebera.android.httpclient.entity.StringEntity;
+import cz.msebera.android.httpclient.message.BasicHeader;
+import cz.msebera.android.httpclient.protocol.HTTP;
 
 public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener,
         DatePickerDialog.OnDateSetListener, OnConnectionFailedListener  {
@@ -80,12 +85,16 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
     private Place lastPlace;
     private EditText lastEditTextUsed;
     boolean lasEditTextUsedIsEscala = true;
+    private List<Vehiculo> vehiculos;
+    private Vehiculo vehiculoSeleccionado;
+    private boolean restDataLoaded;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nuevo_viaje);
+        restDataLoaded = false;
 
         PlaceAutocompleteFragment autocompleteFragmentOrigen = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_origen);
@@ -158,7 +167,17 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
             }
         });
 
+        // cargando los vehiculos desde el server
+        loadData();
+
+
     }
+
+    public void loadData() {
+        cargarVehiculos();
+        //restDataLoaded = true;
+    }
+
 
     @Override
     public void onConnectionFailed(ConnectionResult result) {
@@ -185,7 +204,8 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
     public void showNumberPicker(View v)
     {
         EditText asientos = (EditText) findViewById(R.id.et_asientos);
-        asientos.setText(Integer.toString(1));
+        if (asientos.getText().equals(""))
+            asientos.setText(Integer.toString(1));
         TextView as = (TextView) findViewById(R.id.tv_asientos);
         as.setVisibility(View.VISIBLE);
         final AlertDialog.Builder d = new AlertDialog.Builder(this);
@@ -271,7 +291,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         v.setId(id);
 
         EditText et = (EditText) v.findViewById(R.id.et_punto);
-        et.setHint("Click para cambiar");
+        et.setHint("Click para elegir punto");
 
 
         ImageButton btn = (ImageButton) v.findViewById(R.id.btn_eliminar_punto);
@@ -317,12 +337,12 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
                 View removed = base.findViewById(id);
                 base.removeView(removed);
                 puntosRecogida.remove(id);
-                Toast.makeText(getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
             }
         });
 
         EditText et = (EditText) v.findViewById(R.id.et_punto);
-        et.setHint("Click para cambiar");
+        et.setHint("Click para elegir punto");
         et.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -376,11 +396,159 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
     }
 
     public void crearViaje(View v) {
-        //Toast.makeText(getApplicationContext(), "Hola1", Toast.LENGTH_LONG).show();
+
+        if (!restDataLoaded) {
+            Toast.makeText(getApplicationContext(), getString(R.string.error_no_rest_conection), Toast.LENGTH_LONG).show();
+            loadData();
+            return;
+        }
+
+        // Creando el JSON
+        JSONObject root = new JSONObject();
+        JSONObject data = new JSONObject();
+        JSONArray puntos_recoger = new JSONArray();
+        JSONArray puntos_intermedios = new JSONArray();
+
+        try {
+            String nombre = ((EditText)findViewById(R.id.nombre_viaje)).getText().toString();
+            if (nombre.equals("")) {
+                /*Toast.makeText(getApplicationContext(), getString(R.string.error_no_nombre), Toast.LENGTH_LONG).show();
+                findViewById(R.id.nombre_viaje).requestFocus();*/
+                ((TextView)findViewById(R.id.nombre_viaje)).setError(getString(R.string.error_field_required));
+                return;
+            }
+            data.put("nombre", nombre);
+
+            if (origen == null) {
+                Toast.makeText(getApplicationContext(), getString(R.string.error_no_origen), Toast.LENGTH_LONG).show();
+                return;
+            }
+            data.put("origen_lat", origen.getLatLng().latitude);
+            data.put("origen_lon", origen.getLatLng().longitude);
+            data.put("origen", origen.getAddress());
+
+            if (destino == null) {
+                Toast.makeText(getApplicationContext(), getString(R.string.error_no_destino), Toast.LENGTH_LONG).show();
+                return;
+            }
+            data.put("destino_lat", destino.getLatLng().latitude);
+            data.put("destino_lon", destino.getLatLng().longitude);
+            data.put("destino", destino.getAddress());
+
+            String fecha = ((EditText)findViewById(R.id.et_fecha)).getText().toString().replace('/','-');
+            if (!fecha.matches("^\\d{2}-\\d{2}-\\d{4}$")) {
+                Toast.makeText(getApplicationContext(), getString(R.string.error_no_fecha), Toast.LENGTH_LONG).show();
+                return;
+            }
+            data.put("fecha", fecha);
+
+            String hora = ((EditText)findViewById(R.id.et_hora)).getText().toString();
+            if (hora.equals("")) {
+                Toast.makeText(getApplicationContext(), getString(R.string.error_no_hora), Toast.LENGTH_LONG).show();
+                return;
+            }
+            data.put("hora", hora);
+
+            data.put("tiempo_estimado", null);
+            data.put("tiempo_flexibilidad", null);
+
+            String asientosString = ((EditText)findViewById(R.id.et_asientos)).getText().toString();
+            int asientos = 0;
+            if (asientosString.equals("") || asientosString.equals("0")) {
+                Toast.makeText(getApplicationContext(), getString(R.string.error_no_asientos), Toast.LENGTH_LONG).show();
+                return;
+            } else {
+                asientos = Integer.parseInt(asientosString);
+            }
+            data.put("asientos", asientos);
+
+            String precioString = ((EditText)findViewById(R.id.et_precio)).getText().toString();
+            double precio = 0.0;
+            if (!precioString.matches("^([+-]?(\\d+\\.)?\\d+)$")) {
+                Toast.makeText(getApplicationContext(), getString(R.string.error_no_precio), Toast.LENGTH_LONG).show();
+                return;
+            } else {
+                precio = Double.parseDouble(precioString);
+            }
+            data.put("precio", precio);
+
+
+            data.put("id_carro", vehiculoSeleccionado != null? vehiculoSeleccionado.auto_id : null);
+
+            // puntos recoger
+            int i = 0;
+            for (Map.Entry<Integer, Place> entry : puntosRecogida.entrySet()) {
+                JSONObject p = new JSONObject();
+                p.put("lat", entry.getValue().getLatLng().latitude);
+                p.put("lon", entry.getValue().getLatLng().longitude);
+                puntos_recoger.put(i, p);
+                i++;
+            }
+
+            // puntos intermedios
+            i = 0;
+            for (Map.Entry<Integer, Place> entry : puntosIntermedios.entrySet()) {
+                JSONObject p = new JSONObject();
+                p.put("lat", entry.getValue().getLatLng().latitude);
+                p.put("lon", entry.getValue().getLatLng().longitude);
+                p.put("nombre", entry.getValue().getName());
+                puntos_intermedios.put(i, p);
+                i++;
+            }
+
+            root.put("datos", data);
+            root.put("puntos_recoger", puntos_recoger);
+            root.put("puntos_intermedios", puntos_intermedios);
+
+            Log.e(TAG, root.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        RequestParams params = new RequestParams();
+        params.put("", root.toString());
+        params.setHttpEntityIsRepeatable(true);
+        params.setUseJsonStreamer(false);
+
+        RestClient.post("viajes", params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                //Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
+                // Volver a la actividad anterior
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
+                Toast.makeText(getApplicationContext(), array.toString(), Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onStart() {
+                //Toast.makeText(getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onRetry(int retryNo) {
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
+                Toast.makeText(getApplicationContext(), "Error interno del servidor, por favor reportelo", Toast.LENGTH_LONG).show();
+                Log.e(TAG, errorResponse.toString());
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Toast.makeText(getApplicationContext(), "Error interno del servidor, por favor reportelo", Toast.LENGTH_LONG).show();
+                Log.e(TAG, responseString);
+            }
+        });
+/*
         RestClient.get("viajes", null, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -408,5 +576,80 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
                 Toast.makeText(getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
             }
         });
+*/
+
+    }
+
+
+    public void cargarVehiculos() {
+        RestClient.get("vehiculos", null, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                ArrayList<Vehiculo> result = new ArrayList<>();
+                try {
+                    JSONArray vehiculos = response.getJSONArray("vehiculos");
+                    for (int i = 0; i < vehiculos.length(); i++) {
+                        JSONObject vehiculo = vehiculos.getJSONObject(i);
+                        Vehiculo v = new Vehiculo();
+                        v.auto_id = vehiculo.getInt("auto_id");
+                        v.marca = vehiculo.getString("marca");
+                        v.sub_marca = vehiculo.getString("sub_marca");
+                        v.modelo = vehiculo.getInt("modelo");
+                        v.placa = vehiculo.getString("placa");
+                        v.color = vehiculo.getString("color");
+                        result.add(v);
+                    }
+
+
+                    Spinner spinner = (Spinner) findViewById(R.id.spinner_vehiculo);
+                    ArrayAdapter adapter = new ArrayAdapter(NuevoViaje.this, android.R.layout.simple_spinner_dropdown_item, result);
+                    spinner.setAdapter(adapter);
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            vehiculoSeleccionado = (Vehiculo) parent.getItemAtPosition(position);
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {
+                            vehiculoSeleccionado = (Vehiculo) parent.getItemAtPosition(0);
+                        }
+                    });
+
+                    //Toast.makeText(getApplicationContext(), "restDataLoaded", Toast.LENGTH_LONG).show();
+                    restDataLoaded = true;
+
+                } catch (JSONException e) {
+                    Toast.makeText(getApplicationContext(),
+                            "Error intentando interpretar respuesta del servido", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
+                Toast.makeText(getApplicationContext(), "Hola3", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onStart() {
+                //Toast.makeText(getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onRetry(int retryNo) {
+                Toast.makeText(getApplicationContext(), "Hola5", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
+                Toast.makeText(getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                Toast.makeText(getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
+            }
+        });
+
     }
 }

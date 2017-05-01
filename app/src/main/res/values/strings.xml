@@ -2,13 +2,14 @@
     <string name="app_name">Cooperative Trip</string>
     <string name="title_activity_maps">Map</string>
     <string name="titulo_nuevo_viaje">Origen y destino del viaje</string>
-    <string name="salida">Lugar de salida</string>
+    <string name="salida">Origen</string>
     <string name="destino">Destino</string>
     <string name="titulo_fecha_hora">Fecha y hora</string>
     <string name="titulo_fecha">Fecha</string>
     <string name="titulo_hora">Hora</string>
     <string name="titulo_tiempo_estimado">Tiempo estimado</string>
     <string name="titulo_asientos">Asientos</string>
+    <string name="titulo_precio">Precio</string>
     <string name="title_activity_login">Sign in</string>
     <string name="crear_viaje">Crear viaje</string>
     <string name="escalas">Escalas</string>
@@ -16,22 +17,37 @@
     <string name="agregar_escala">Agregar escala</string>
     <string name="agregar_recoger">Agregar punto</string>
     <string name="nombre_viaje">Elige el nombre de tu viaje</string>
+    <string name="titulo_elije_vehiculo">Elige el vehículo para el viaje</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password (optional)</string>
-    <string name="action_sign_in">Sign in or register</string>
-    <string name="action_sign_in_short">Sign in</string>
-    <string name="error_invalid_email">This email address is invalid</string>
-    <string name="error_invalid_password">This password is too short</string>
-    <string name="error_incorrect_password">This password is incorrect</string>
-    <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email
-        completions."
-    </string>
+    <string name="prompt_password">Contraseña (opcional)</string>
+    <string name="action_sign_in">Entrar</string>
+    <string name="action_sign_in_short">Log in</string>
+    <string name="error_invalid_email">Esta dirección de correo es inválida</string>
+    <string name="error_invalid_password">La contraseña es muy corata</string>
+    <string name="error_incorrect_password">La contraseña es incorrecta</string>
+    <string name="error_field_required">Este campo es requerido</string>
+    <string name="permission_rationale">Se requieren permisos para leer contactos para autocompletar este campo</string>
     <string name="title_activity_nuevo_viaje">NuevoViaje</string>
 
 
     <string name="error_no_internet">Se requiere conexión a internet para utilizar los servicios de Google</string>
+    <string name="error_no_rest_conection">No hay conexión con el servidor</string>
     <string name="error_desconocido">Ocurrío un error desconocido, intenta nuevamente</string>
+
+
+    <string name="error_no_nombre">Debe elegir un nombre para su viaje</string>
+    <string name="error_no_origen">Indique un punto de origen</string>
+    <string name="error_no_destino">Indique un punto de destino</string>
+    <string name="error_no_fecha">Indique la fecha del viaje</string>
+    <string name="error_no_hora">Indique la hora del viaje</string>
+    <string name="error_no_asientos">Indique el número de asientos</string>
+    <string name="error_no_precio">El precio para el viaje es incorrecto</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
 </resources>

@@ -3,8 +3,11 @@ package mx.iteso.pam2017.a705164.cooperativetrip;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -19,18 +22,30 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import cz.msebera.android.httpclient.Header;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -38,6 +53,7 @@ import static android.Manifest.permission.READ_CONTACTS;
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+    private static final String TAG = "LoginActivity";
 
     /**
      * Id to identity READ_CONTACTS permission request.
@@ -54,7 +70,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
+    //private UserLoginTask mAuthTask = null;
 
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -66,6 +82,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -92,6 +109,27 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        showProgress(true);
+        // if is required logout
+        Bundle b = getIntent().getExtras();
+        boolean logoutRequired = false;
+        if (b != null) {
+            logoutRequired = b.getBoolean("logout");
+        }
+
+        if (logoutRequired) {
+            AuthenticationManager.logOut();
+        }
+
+        // Quickly check if is logged
+        if (checkIfLogged()) {
+            // abrir main activity
+            Intent intent = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
+        }
+        showProgress(false);
     }
 
     private void populateAutoComplete() {
@@ -144,9 +182,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        if (mAuthTask != null) {
+        /*if (mAuthTask != null) {
             return;
-        }
+        }*/
+
+        hideKeyboard(this);
 
         // Reset errors.
         mEmailView.setError(null);
@@ -185,8 +225,104 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+            /*mAuthTask = new UserLoginTask(email, password);
+            mAuthTask.execute((Void) null);*/
+
+            JSONObject root = new JSONObject();
+            try {
+                root.put("correo", email);
+                root.put("contrasena", password);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.e(TAG, root.toString());
+            RequestParams params = new RequestParams();
+            params.put("", root.toString());
+            params.setHttpEntityIsRepeatable(true);
+            params.setUseJsonStreamer(false);
+
+            RestClient.post("usuarios/login", params, new JsonHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    // Iniciar la actividad principal
+                    try {
+                        int estado = response.getInt("estado");
+
+                        if (estado == 10) {
+                            JSONObject uObj = response.getJSONObject("usuario");
+                            // settear los valores de la sesion
+                            String apiKey = uObj.getString("clave_api");
+                            AuthenticationManager.setKey(apiKey);
+
+                            Usuario usuario = new Usuario();
+                            usuario.id = uObj.getInt("id");
+                            usuario.correo = uObj.getString("correo");
+                            usuario.telefono = uObj.getString("telefono");
+                            usuario.nombreUsuario = uObj.getString("nombre_usuario");
+                            usuario.nombre = uObj.getString("nombre");
+                            usuario.apellido = uObj.getString("apellido");
+                            AuthenticationManager.setUsuario(usuario);
+
+                            // abrir main activity
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
+                            finish();
+                        } else if (estado == 11){
+                            //Toast.makeText(getApplicationContext(), "El usuario y/o la contrasena son invalidos", Toast.LENGTH_LONG);
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    showProgress(false);
+                }
+
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
+                    Toast.makeText(getApplicationContext(), array.toString(), Toast.LENGTH_LONG).show();
+                    showProgress(false);
+                }
+
+                @Override
+                public void onStart() {
+                    //Toast.makeText(getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onRetry(int retryNo) {
+
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
+                    Log.e(TAG, errorResponse.toString());
+
+                    try {
+                        int estado = errorResponse.getInt("estado");
+                        if (estado == 11) {
+                            //Toast.makeText(getApplicationContext(), "El usuario y/o la contrasena son invalidos", Toast.LENGTH_LONG).show();
+                            CoordinatorLayout coordinatorLayout = (CoordinatorLayout)findViewById(R.id.coordinatorLayout);
+                            Snackbar snackbar = Snackbar
+                                    .make(coordinatorLayout, "El usuario y/o la contrasena son invalidos", Snackbar.LENGTH_LONG);
+
+                            snackbar.show();
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    showProgress(false);
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                    Toast.makeText(getApplicationContext(), "Error interno del servidor, por favor reportelo", Toast.LENGTH_LONG).show();
+                    Log.e(TAG, responseString);
+                    showProgress(false);
+                }
+            });
+
         }
     }
 
@@ -197,7 +333,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() > 3;
     }
 
     /**
@@ -329,7 +465,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
+            //mAuthTask = null;
             showProgress(false);
 
             if (success) {
@@ -342,9 +478,27 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected void onCancelled() {
-            mAuthTask = null;
+            //mAuthTask = null;
             showProgress(false);
         }
+    }
+
+
+    public boolean checkIfLogged() {
+        AuthenticationManager.setActivity(this);
+        return AuthenticationManager.isLogged();
+    }
+
+
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = activity.getCurrentFocus();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(activity);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }
 
