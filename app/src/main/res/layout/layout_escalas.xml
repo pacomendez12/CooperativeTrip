@@ -21,7 +21,6 @@
         android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
         android:padding="15dp"
-        android:text="@string/agregar_escala"
-        android:onClick="agregarEscala"/>
+        android:text="@string/agregar_escala" />
 
 </LinearLayout>

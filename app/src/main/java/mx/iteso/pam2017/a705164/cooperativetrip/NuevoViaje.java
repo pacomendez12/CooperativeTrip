@@ -1,11 +1,21 @@
 package mx.iteso.pam2017.a705164.cooperativetrip;
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -14,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -42,7 +53,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -52,17 +62,14 @@ import java.util.List;
 import java.util.Map;
 
 import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.HttpEntity;
-import cz.msebera.android.httpclient.entity.ByteArrayEntity;
-import cz.msebera.android.httpclient.entity.StringEntity;
-import cz.msebera.android.httpclient.message.BasicHeader;
-import cz.msebera.android.httpclient.protocol.HTTP;
 
-public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener,
+
+public class NuevoViaje extends Fragment implements TimePickerDialog.OnTimeSetListener,
         DatePickerDialog.OnDateSetListener, OnConnectionFailedListener  {
     final private String TAG =  "NuevoViaje";
     EditText horaET;
     EditText fechaET;
+    EditText asientosET;
 
     int hora;
     int minuto;
@@ -89,15 +96,73 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
     private Vehiculo vehiculoSeleccionado;
     private boolean restDataLoaded;
 
+    private PlaceAutocompleteFragment autocompleteFragmentOrigen;
+    private PlaceAutocompleteFragment autocompleteFragmentDestino;
+
+    View myView;
+    private OnFragmentInteractionListener mListener;
+
+    public NuevoViaje(){
+
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_nuevo_viaje);
+
+    }
+
+
+    // TODO: Rename method, update argument and hook method into UI event
+    public void onButtonPressed(Uri uri) {
+        if (mListener != null) {
+            mListener.onFragmentInteraction(uri);
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof MainFragment.OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+    public interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        void onFragmentInteraction(Uri uri);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        myView = inflater.inflate(R.layout.activity_nuevo_viaje, container, false);
+        return myView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        //setContentView(R.layout.activity_nuevo_viaje);
         restDataLoaded = false;
 
-        PlaceAutocompleteFragment autocompleteFragmentOrigen = (PlaceAutocompleteFragment)
-                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_origen);
+        ((MainActivity)getActivity()).setBarTitle("Nuevo viaje");
+
+        autocompleteFragmentOrigen = (PlaceAutocompleteFragment)
+                getChildFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_origen);
+
+        if (autocompleteFragmentOrigen == null) {
+            autocompleteFragmentOrigen = (PlaceAutocompleteFragment)
+                    getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_origen);
+        }
 
         puntosIntermedios = new HashMap<>();
         puntosRecogida = new HashMap<>();
@@ -105,49 +170,42 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         autocompleteFragmentOrigen.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
                 Log.i(TAG, "Place: " + place.getName());
                 origen = place;
-
-                /*String placeDetailsStr = place.getName() + "\n"
-                        + place.getId() + "\n"
-                        + place.getLatLng().toString() + "\n"
-                        + place.getAddress() + "\n"
-                        + place.getAttributions();
-                Toast.makeText(getApplicationContext(), placeDetailsStr, Toast.LENGTH_LONG).show();*/
             }
 
             @Override
             public void onError(Status status) {
-                // TODO: Handle the error.
                 Log.i(TAG, "An error occurred: " + status);
             }
         });
 
-        PlaceAutocompleteFragment autocompleteFragmentDestino = (PlaceAutocompleteFragment)
-                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_destino);
+        autocompleteFragmentDestino = (PlaceAutocompleteFragment)
+                getChildFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_destino);
+
+        if (autocompleteFragmentDestino == null) {
+            autocompleteFragmentDestino = (PlaceAutocompleteFragment)
+                    getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_destino);
+        }
 
         autocompleteFragmentDestino.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
                 Log.i(TAG, "Place: " + place.getName());
                 destino = place;
             }
 
             @Override
             public void onError(Status status) {
-                // TODO: Handle the error.
                 Log.i(TAG, "An error occurred: " + status);
-                Toast.makeText(getApplicationContext(), getResources().getString(R.string.error_desconocido),
+                Toast.makeText(myView.getContext(), getResources().getString(R.string.error_desconocido),
                         Toast.LENGTH_LONG).show();
             }
         });
 
 
-
-        horaET = (EditText) findViewById(R.id.et_hora);
-        fechaET = (EditText) findViewById(R.id.et_fecha);
+        horaET = (EditText) myView.findViewById(R.id.et_hora);
+        fechaET = (EditText) myView.findViewById(R.id.et_fecha);
 
         horaET.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -167,10 +225,60 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
             }
         });
 
+        asientosET = (EditText) myView.findViewById(R.id.et_asientos);
+        asientosET.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showNumberPicker(v);
+            }
+        });
+
+        final Button guardarViaje = (Button) myView.findViewById(R.id.btn_guardar);
+        guardarViaje.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                crearViaje(v);
+            }
+        });
+
+        Button agregarEscataBtn = (Button)myView.findViewById(R.id.btn_agregar_escala);
+        agregarEscataBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                agregarEscala(v);
+            }
+        });
+
+        Button agregarRecogerBtn = (Button) myView.findViewById(R.id.btn_agregar_recoger);
+        agregarRecogerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                agregarRecoger(v);
+            }
+        });
+
+        if (!Util.isConnected(getActivity())) {
+            showNoInternet();
+        }
         // cargando los vehiculos desde el server
         loadData();
+    }
 
+    public void onDestroyView() {
+        super.onDestroyView();
+        Activity activity = getActivity();
+        if(activity != null) {
+            try {
+                android.app.FragmentManager fm = activity.getFragmentManager();
 
+                FragmentTransaction ft = fm.beginTransaction();
+                if (!autocompleteFragmentOrigen.isDetached())
+                    ft.remove(autocompleteFragmentOrigen);
+                if (!autocompleteFragmentDestino.isDetached())
+                    ft.remove(autocompleteFragmentDestino);
+                ft.commit();
+            } catch (IllegalStateException e) {}
+        }
     }
 
     public void loadData() {
@@ -178,10 +286,9 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         //restDataLoaded = true;
     }
 
-
     @Override
     public void onConnectionFailed(ConnectionResult result) {
-        Toast.makeText(getApplicationContext(), getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
+        Toast.makeText(myView.getContext(), getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
     }
 
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
@@ -203,13 +310,13 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
 
     public void showNumberPicker(View v)
     {
-        EditText asientos = (EditText) findViewById(R.id.et_asientos);
+        EditText asientos = (EditText) myView.findViewById(R.id.et_asientos);
         if (asientos.getText().equals(""))
             asientos.setText(Integer.toString(1));
-        TextView as = (TextView) findViewById(R.id.tv_asientos);
+        TextView as = (TextView) myView.findViewById(R.id.tv_asientos);
         as.setVisibility(View.VISIBLE);
-        final AlertDialog.Builder d = new AlertDialog.Builder(this);
-        LayoutInflater inflater = this.getLayoutInflater();
+        final AlertDialog.Builder d = new AlertDialog.Builder(this.getActivity());
+        LayoutInflater inflater = this.getActivity().getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.number_picker_dialog, null);
         d.setTitle("Asientos disponibles");
         //d.setMessage("Message");
@@ -222,7 +329,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
             @Override
             public void onValueChange(NumberPicker numberPicker, int i, int i1) {
                 Log.d(TAG, "onValueChange: ");
-                EditText asientos = (EditText) findViewById(R.id.et_asientos);
+                EditText asientos = (EditText) myView.findViewById(R.id.et_asientos);
                 asientos.setText(Integer.toString(i1));
             }
         });
@@ -246,7 +353,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
                     new PlacePicker.IntentBuilder();
             if (lastPlace == null) {
                 double radiusDegrees = 0.25;
-                GPSHelper gps = new GPSHelper(NuevoViaje.this);
+                GPSHelper gps = new GPSHelper(NuevoViaje.this.getActivity());
                 gps.getMyLocation();
                 LatLng center = new LatLng(gps.getLatitude(), gps.getLongitude());
                 LatLng northEast = new LatLng(center.latitude + radiusDegrees, center.longitude + radiusDegrees);
@@ -273,7 +380,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
                 intentBuilder.setLatLngBounds(bounds);
             }
 
-            Intent intent = intentBuilder.build(NuevoViaje.this);
+            Intent intent = intentBuilder.build(NuevoViaje.this.getActivity());
             startActivityForResult(intent, PLACE_PICKER_REQUEST);
 
         } catch (GooglePlayServicesRepairableException
@@ -286,7 +393,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
 
     public void agregarEscala(View vButton) {
         final int id = idDinamico++;
-        LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater vi = (LayoutInflater) getActivity().getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = vi.inflate(R.layout.layout_nuevo_punto, null);
         v.setId(id);
 
@@ -298,8 +405,8 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View viewButton) {
-                ViewGroup base = (ViewGroup) findViewById(R.id.layout_escalas);
-                View removed = findViewById(id);
+                ViewGroup base = (ViewGroup) myView.findViewById(R.id.layout_escalas);
+                View removed = myView.findViewById(id);
                 base.removeView(removed);
                 puntosIntermedios.remove(id);
             }
@@ -308,7 +415,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         et.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Toast.makeText(getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
                 lastEditTextUsed = (EditText)v;
                 lasEditTextUsedIsEscala = true;
                 lanzarPlacePicker();
@@ -316,7 +423,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         });
 
         // insert into main view
-        ViewGroup insertPoint = (ViewGroup) findViewById(R.id.layout_escalas);
+        ViewGroup insertPoint = (ViewGroup) myView.findViewById(R.id.layout_escalas);
         insertPoint.addView(v, puntosIntermedios.size() + 1, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
         puntosIntermedios.put(id, null);
     }
@@ -325,7 +432,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
 
     public void agregarRecoger(View boton) {
         final int id = idDinamico++;
-        LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater vi = (LayoutInflater) getActivity().getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = vi.inflate(R.layout.layout_nuevo_punto, null);
         v.setId(id);
 
@@ -333,11 +440,11 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View viewButton) {
-                ViewGroup base = (ViewGroup) findViewById(R.id.layout_pick_up_points);
+                ViewGroup base = (ViewGroup) myView.findViewById(R.id.layout_pick_up_points);
                 View removed = base.findViewById(id);
                 base.removeView(removed);
                 puntosRecogida.remove(id);
-                //Toast.makeText(getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -348,25 +455,25 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
             public void onClick(View v) {
                 lastEditTextUsed = (EditText)v;
                 lasEditTextUsedIsEscala = false;
-                //Toast.makeText(getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Paco", Toast.LENGTH_LONG).show();
                 lanzarPlacePicker();
             }
         });
 
         // insert into main view
-        ViewGroup insertPoint = (ViewGroup) findViewById(R.id.layout_pick_up_points);
+        ViewGroup insertPoint = (ViewGroup) myView.findViewById(R.id.layout_pick_up_points);
         insertPoint.addView(v, puntosRecogida.size() + 1, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
         puntosRecogida.put(id, null);
     }
 
     @Override
-    protected void onActivityResult(int requestCode,
-                                    int resultCode, Intent data) {
+    public void onActivityResult(int requestCode,
+                                 int resultCode, Intent data) {
 
         if (requestCode == PLACE_PICKER_REQUEST
                 && resultCode == Activity.RESULT_OK) {
 
-            final Place place = PlacePicker.getPlace(this, data);
+            final Place place = PlacePicker.getPlace(this.getActivity(), data);
             lastPlace = place;
             final CharSequence name = place.getName();
             final CharSequence address = place.getAddress();
@@ -398,7 +505,7 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
     public void crearViaje(View v) {
 
         if (!restDataLoaded) {
-            Toast.makeText(getApplicationContext(), getString(R.string.error_no_rest_conection), Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_rest_conection), Toast.LENGTH_LONG).show();
             loadData();
             return;
         }
@@ -410,17 +517,17 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         JSONArray puntos_intermedios = new JSONArray();
 
         try {
-            String nombre = ((EditText)findViewById(R.id.nombre_viaje)).getText().toString();
+            String nombre = ((EditText)myView.findViewById(R.id.nombre_viaje)).getText().toString();
             if (nombre.equals("")) {
-                /*Toast.makeText(getApplicationContext(), getString(R.string.error_no_nombre), Toast.LENGTH_LONG).show();
+                /*Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_nombre), Toast.LENGTH_LONG).show();
                 findViewById(R.id.nombre_viaje).requestFocus();*/
-                ((TextView)findViewById(R.id.nombre_viaje)).setError(getString(R.string.error_field_required));
+                ((TextView)myView.findViewById(R.id.nombre_viaje)).setError(getString(R.string.error_field_required));
                 return;
             }
             data.put("nombre", nombre);
 
             if (origen == null) {
-                Toast.makeText(getApplicationContext(), getString(R.string.error_no_origen), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_origen), Toast.LENGTH_LONG).show();
                 return;
             }
             data.put("origen_lat", origen.getLatLng().latitude);
@@ -428,23 +535,23 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
             data.put("origen", origen.getAddress());
 
             if (destino == null) {
-                Toast.makeText(getApplicationContext(), getString(R.string.error_no_destino), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_destino), Toast.LENGTH_LONG).show();
                 return;
             }
             data.put("destino_lat", destino.getLatLng().latitude);
             data.put("destino_lon", destino.getLatLng().longitude);
             data.put("destino", destino.getAddress());
 
-            String fecha = ((EditText)findViewById(R.id.et_fecha)).getText().toString().replace('/','-');
+            String fecha = ((EditText)myView.findViewById(R.id.et_fecha)).getText().toString().replace('/','-');
             if (!fecha.matches("^\\d{2}-\\d{2}-\\d{4}$")) {
-                Toast.makeText(getApplicationContext(), getString(R.string.error_no_fecha), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_fecha), Toast.LENGTH_LONG).show();
                 return;
             }
             data.put("fecha", fecha);
 
-            String hora = ((EditText)findViewById(R.id.et_hora)).getText().toString();
+            String hora = ((EditText)myView.findViewById(R.id.et_hora)).getText().toString();
             if (hora.equals("")) {
-                Toast.makeText(getApplicationContext(), getString(R.string.error_no_hora), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_hora), Toast.LENGTH_LONG).show();
                 return;
             }
             data.put("hora", hora);
@@ -452,20 +559,20 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
             data.put("tiempo_estimado", null);
             data.put("tiempo_flexibilidad", null);
 
-            String asientosString = ((EditText)findViewById(R.id.et_asientos)).getText().toString();
+            String asientosString = ((EditText)myView.findViewById(R.id.et_asientos)).getText().toString();
             int asientos = 0;
             if (asientosString.equals("") || asientosString.equals("0")) {
-                Toast.makeText(getApplicationContext(), getString(R.string.error_no_asientos), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_asientos), Toast.LENGTH_LONG).show();
                 return;
             } else {
                 asientos = Integer.parseInt(asientosString);
             }
             data.put("asientos", asientos);
 
-            String precioString = ((EditText)findViewById(R.id.et_precio)).getText().toString();
+            String precioString = ((EditText)myView.findViewById(R.id.et_precio)).getText().toString();
             double precio = 0.0;
             if (!precioString.matches("^([+-]?(\\d+\\.)?\\d+)$")) {
-                Toast.makeText(getApplicationContext(), getString(R.string.error_no_precio), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.error_no_precio), Toast.LENGTH_LONG).show();
                 return;
             } else {
                 precio = Double.parseDouble(precioString);
@@ -478,21 +585,25 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
             // puntos recoger
             int i = 0;
             for (Map.Entry<Integer, Place> entry : puntosRecogida.entrySet()) {
-                JSONObject p = new JSONObject();
-                p.put("lat", entry.getValue().getLatLng().latitude);
-                p.put("lon", entry.getValue().getLatLng().longitude);
-                puntos_recoger.put(i, p);
+                if (entry.getValue() != null) {
+                    JSONObject p = new JSONObject();
+                    p.put("lat", entry.getValue().getLatLng().latitude);
+                    p.put("lon", entry.getValue().getLatLng().longitude);
+                    puntos_recoger.put(i, p);
+                }
                 i++;
             }
 
             // puntos intermedios
             i = 0;
             for (Map.Entry<Integer, Place> entry : puntosIntermedios.entrySet()) {
-                JSONObject p = new JSONObject();
-                p.put("lat", entry.getValue().getLatLng().latitude);
-                p.put("lon", entry.getValue().getLatLng().longitude);
-                p.put("nombre", entry.getValue().getName());
-                puntos_intermedios.put(i, p);
+                if (entry.getValue() != null) {
+                    JSONObject p = new JSONObject();
+                    p.put("lat", entry.getValue().getLatLng().latitude);
+                    p.put("lon", entry.getValue().getLatLng().longitude);
+                    p.put("nombre", entry.getValue().getName());
+                    puntos_intermedios.put(i, p);
+                }
                 i++;
             }
 
@@ -513,18 +624,27 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         RestClient.post("viajes", params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                //Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), "Viaje creado con éxito", Toast.LENGTH_LONG).show();
                 // Volver a la actividad anterior
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        android.app.FragmentManager fragmentManager =  getActivity().getFragmentManager();
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.content_frame, new MainFragment(), "MAIN_ACTIVITY_FRAGMENT")
+                                .commit();
+                    }
+                }, 1000);
             }
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
-                Toast.makeText(getApplicationContext(), array.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), array.toString(), Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onStart() {
-                //Toast.makeText(getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -534,50 +654,16 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
 
             @Override
             public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
-                Toast.makeText(getApplicationContext(), "Error interno del servidor, por favor reportelo", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), "Error interno del servidor, por favor reportelo", Toast.LENGTH_LONG).show();
                 Log.e(TAG, errorResponse.toString());
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Toast.makeText(getApplicationContext(), "Error interno del servidor, por favor reportelo", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), "Error interno del servidor, por favor reportelo", Toast.LENGTH_LONG).show();
                 Log.e(TAG, responseString);
             }
         });
-/*
-        RestClient.get("viajes", null, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                //Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
-                Toast.makeText(getApplicationContext(), "Hola3", Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onStart() {
-                //Toast.makeText(getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onRetry(int retryNo) {
-                Toast.makeText(getApplicationContext(), "Hola5", Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
-                Toast.makeText(getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Toast.makeText(getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
-            }
-        });
-*/
-
     }
 
 
@@ -585,6 +671,8 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
         RestClient.get("vehiculos", null, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                if (response == null)
+                    return;
                 ArrayList<Vehiculo> result = new ArrayList<>();
                 try {
                     JSONArray vehiculos = response.getJSONArray("vehiculos");
@@ -601,8 +689,8 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
                     }
 
 
-                    Spinner spinner = (Spinner) findViewById(R.id.spinner_vehiculo);
-                    ArrayAdapter adapter = new ArrayAdapter(NuevoViaje.this, android.R.layout.simple_spinner_dropdown_item, result);
+                    Spinner spinner = (Spinner) myView.findViewById(R.id.spinner_vehiculo);
+                    ArrayAdapter adapter = new ArrayAdapter(NuevoViaje.this.getActivity(), android.R.layout.simple_spinner_dropdown_item, result);
                     spinner.setAdapter(adapter);
                     spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
@@ -616,40 +704,58 @@ public class NuevoViaje extends AppCompatActivity implements TimePickerDialog.On
                         }
                     });
 
-                    //Toast.makeText(getApplicationContext(), "restDataLoaded", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getActivity().getApplicationContext(), "restDataLoaded", Toast.LENGTH_LONG).show();
                     restDataLoaded = true;
 
                 } catch (JSONException e) {
-                    Toast.makeText(getApplicationContext(),
-                            "Error intentando interpretar respuesta del servido", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(),
+                            "Error intentando interpretar respuesta del servidor", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
-                Toast.makeText(getApplicationContext(), "Hola3", Toast.LENGTH_LONG).show();
+                if (array != null)
+                    Toast.makeText(getActivity().getApplicationContext(), "Hola3", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onStart() {
-                //Toast.makeText(getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onRetry(int retryNo) {
-                Toast.makeText(getApplicationContext(), "Hola5", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Hola5", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
-                Toast.makeText(getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
+                if (errorResponse != null) {
+                    Toast.makeText(getActivity().getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
+                    showNoInternet();
+                } else {
+                    showNoInternet();
+                }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Toast.makeText(getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
+                if (responseString != null) {
+                    Toast.makeText(getActivity().getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
+                    showNoInternet();
+                } else {
+                    showNoInternet();
+                }
             }
         });
 
+    }
+
+    public void showNoInternet() {
+        /*CoordinatorLayout layout = (CoordinatorLayout) myView.findViewById(R.id.coordinatorLayoutMain);
+        Snackbar snackbar = Snackbar.make(layout, "No hay conexión a internet, es necesaria una conexión", Snackbar.LENGTH_INDEFINITE);
+        snackbar.show();*/
+        Toast.makeText(getActivity().getApplicationContext(), "No hay conexión a internet, es necesaria una conexión", Toast.LENGTH_LONG).show();
     }
 }

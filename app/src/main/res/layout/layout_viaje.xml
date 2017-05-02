@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:animateLayoutChanges="true"
+    android:layout_margin="10dp"
+    android:background="@drawable/box_background"
+    android:padding="10dp"
+    >
+
+    <TextView
+        android:id="@+id/tv_nombre"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Nombre:"
+        android:textAlignment="viewEnd"
+        android:textColor="#444" />
+
+    <TextView
+        android:id="@+id/tv_nombre_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/tv_nombre"
+        android:textAlignment="center"
+        android:text="contenido"/>
+
+    <TextView
+        android:id="@+id/tv_origen"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingLeft="30dp"
+        android:layout_marginTop="10dp"
+        android:text="Origen:"
+        android:textAlignment="viewEnd"
+        android:layout_below="@+id/tv_nombre"
+        android:textColor="#444" />
+
+    <TextView
+        android:id="@+id/tv_origen_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/tv_origen"
+        android:layout_below="@+id/tv_nombre_content"
+        android:layout_marginTop="10dp"
+        android:paddingLeft="20dp"
+        android:text="contenido"
+        android:maxLines="1"/>
+
+    <TextView
+        android:id="@+id/tv_destino"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingLeft="30dp"
+        android:layout_marginTop="10dp"
+        android:text="Destino:"
+        android:textAlignment="viewEnd"
+        android:layout_below="@+id/tv_origen"
+        android:textColor="#444" />
+
+    <TextView
+        android:id="@+id/tv_destino_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/tv_destino"
+        android:layout_below="@+id/tv_origen_content"
+        android:layout_marginTop="10dp"
+        android:paddingLeft="20dp"
+        android:text="contenido"
+        android:maxLines="1"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/tv_destino">
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight=".3"
+            android:layout_below="@id/tv_destino"
+            android:layout_alignParentLeft="true"
+            android:text="Fecha"
+            android:layout_marginTop="10dp"
+            android:textAlignment="viewEnd"
+            android:textColor="#444"/>
+
+
+        <TextView
+            android:id="@+id/tv_fecha_content"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.25"
+            android:layout_marginTop="10dp"
+            android:paddingLeft="20dp"
+            android:textAlignment="center"
+            android:text="contenido"
+            android:maxLines="1"/>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:layout_below="@id/tv_destino"
+            android:layout_alignParentLeft="true"
+            android:text="Hora"
+            android:layout_marginTop="10dp"
+            android:textAlignment="viewEnd"
+            android:textColor="#444"/>
+
+
+        <TextView
+            android:id="@+id/tv_hora_content"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.25"
+            android:layout_marginTop="10dp"
+            android:paddingLeft="20dp"
+            android:textAlignment="center"
+            android:text="contenido"
+            android:maxLines="1"/>
+    </LinearLayout>
+
+</RelativeLayout>

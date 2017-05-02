@@ -21,7 +21,7 @@
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
-    <string name="prompt_password">Contraseña (opcional)</string>
+    <string name="prompt_password">Contraseña</string>
     <string name="action_sign_in">Entrar</string>
     <string name="action_sign_in_short">Log in</string>
     <string name="error_invalid_email">Esta dirección de correo es inválida</string>
@@ -50,4 +50,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="txt_no_viajes">No tienes viajes creados</string>
 </resources>

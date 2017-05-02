@@ -13,7 +13,7 @@
         android:textAlignment="center" />
 
     <Button
-        android:id="@+id/btn_agregar_escala"
+        android:id="@+id/btn_agregar_recoger"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal|center_vertical"
@@ -21,7 +21,6 @@
         android:layout_marginTop="20dp"
         android:layout_marginRight="10dp"
         android:padding="15dp"
-        android:text="@string/agregar_recoger"
-        android:onClick="agregarRecoger"/>
+        android:text="@string/agregar_recoger" />
 
 </LinearLayout>

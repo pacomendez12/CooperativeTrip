@@ -114,8 +114,7 @@
                     android:layout_marginRight="10dp"
                     android:paddingRight="25dp"
                     android:paddingTop="20dp"
-                    android:focusable="false"
-                    android:onClick="openDatePicker"/>
+                    android:focusable="false" />
 
                 <EditText
                     android:id="@+id/et_hora"
@@ -209,7 +208,7 @@
                     android:paddingRight="10dp"
                     android:paddingTop="20dp"
                     android:focusable="false"
-                    android:onClick="showNumberPicker"/>
+                    />
             </LinearLayout>
 
 
@@ -234,8 +233,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="25dp"
-                android:text="@string/crear_viaje"
-                android:onClick="crearViaje"/>
+                android:text="@string/crear_viaje" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

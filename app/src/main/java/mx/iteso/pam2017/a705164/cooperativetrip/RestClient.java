@@ -19,11 +19,13 @@ public class RestClient {
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.addHeader("Authorization", AuthenticationManager.getKey());
+        client.setMaxRetriesAndTimeout(1, 3000);
         client.get(getAbsoluteUrl(url), params, responseHandler);
     }
 
     public static void post(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.addHeader("Authorization", AuthenticationManager.getKey());
+        client.setMaxRetriesAndTimeout(1, 3000);
         client.post(getAbsoluteUrl(url), params, responseHandler);
     }
 
