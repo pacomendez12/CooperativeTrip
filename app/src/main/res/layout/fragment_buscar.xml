@@ -64,7 +64,7 @@
             </LinearLayout>
 
             <Button
-                android:id="@+id/btn_buscar"
+                android:id="@+id/btn_buscar_viaje"
                 android:layout_width="match_parent"
                 android:layout_height="fill_parent"
                 android:text="Buscar"
@@ -77,6 +77,22 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/buscar_progress"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:visibility="gone">
+            <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_gravity="center_vertical|center_horizontal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_buscar_view"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:orientation="vertical"
@@ -90,7 +106,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
-                    <include layout="@layout/layout_viaje"></include>
                 </LinearLayout>
             </ScrollView>
 

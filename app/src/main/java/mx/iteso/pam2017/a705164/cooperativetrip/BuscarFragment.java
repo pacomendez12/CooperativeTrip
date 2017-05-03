@@ -1,9 +1,14 @@
 package mx.iteso.pam2017.a705164.cooperativetrip;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.annotation.Nullable;
@@ -11,14 +16,34 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.loopj.android.http.JsonHttpResponseHandler;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+
+import cz.msebera.android.httpclient.Header;
 
 
 /**
@@ -29,7 +54,7 @@ import java.util.HashMap;
  * Use the {@link BuscarFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class BuscarFragment extends Fragment {
+public class BuscarFragment extends Fragment implements DatePickerDialog.OnDateSetListener {
     private static final String TAG = "BuscarFragment";
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -44,8 +69,17 @@ public class BuscarFragment extends Fragment {
     private View view;
     private PlaceAutocompleteFragment autocompleteFragmentOrigen;
     private PlaceAutocompleteFragment autocompleteFragmentDestino;
+    private EditText fechaET;
+    private Button btnBuscar;
     private Place origen;
     private Place destino;
+
+    LinearLayout mViajesView;
+    LinearLayout mProgressView;
+
+    private int anio;
+    private int mes;
+    private int dia;
 
     public BuscarFragment() {
         // Required empty public constructor
@@ -91,6 +125,9 @@ public class BuscarFragment extends Fragment {
 
         ((MainActivity)getActivity()).setBarTitle("Buscar viaje");
 
+        mViajesView = (LinearLayout) view.findViewById(R.id.ll_buscar_view);
+        mProgressView = (LinearLayout) view.findViewById(R.id.buscar_progress);
+
         autocompleteFragmentOrigen = (PlaceAutocompleteFragment)
                 getChildFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_origen_buscar);
 
@@ -135,6 +172,27 @@ public class BuscarFragment extends Fragment {
                         Toast.LENGTH_LONG).show();
             }
         });
+
+        fechaET = (EditText) view.findViewById(R.id.et_buscar_fecha);
+        fechaET.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatePickerFragment newFragment = new DatePickerFragment();
+                newFragment.setDateListener(BuscarFragment.this);
+                newFragment.show(getFragmentManager(), "datePicker");
+            }
+        });
+
+        btnBuscar = (Button) view.findViewById(R.id.btn_buscar_viaje);
+        btnBuscar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                buscarViaje();
+            }
+        });
+
+
+
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -159,6 +217,17 @@ public class BuscarFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+        anio = year;
+        mes = month;
+        dia = dayOfMonth;
+        Date date = new Date(anio - 1900, mes, dia);
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+        String reportDate = df.format(date);
+        fechaET.setText(reportDate);
     }
 
     /**
@@ -192,6 +261,182 @@ public class BuscarFragment extends Fragment {
                     ft.remove(autocompleteFragmentDestino);
                 ft.commit();
             } catch (IllegalStateException e) {}
+        }
+    }
+
+
+    public void buscarViaje() {
+        // Limpiar los viajes actuales
+        LinearLayout contenedor = (LinearLayout)view.findViewById(R.id.ll_buscar_content);
+        contenedor.removeAllViews();
+
+        if (origen == null) {
+            Toast.makeText(getActivity().getApplicationContext(), "Elige un punto de origen", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (destino == null) {
+            Toast.makeText(getActivity().getApplicationContext(), "Elige un punto de destino", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String fecha = fechaET.getText().toString();
+        if (fecha.equals("")) {
+            Toast.makeText(getActivity().getApplicationContext(), "Elige una fecha para tu viaje", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        fecha = fecha.replace('/','-');
+        String lugarOrigen = origen.getName().toString();
+        String lugarDestino = destino.getName().toString();
+
+        String path = "viajes/buscar/" + lugarOrigen + "/" + lugarDestino + "/" + fecha;
+
+
+
+        RestClient.get(path, null, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                if (response == null)
+                    return;
+                //Toast.makeText(getActivity().getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
+                try {
+                    int estado = response.getInt("estado");
+                    if (estado == 1) {
+                        JSONArray viajes = response.getJSONArray("mensaje");
+                        int len = viajes.length();
+                        for(int i = 0; i < len; i++) {
+                            JSONObject viaje = viajes.getJSONObject(i).getJSONObject("datos");
+                            if (viaje != null) {
+                                agregarViajeView(viaje, i);
+                            }
+                        }
+                    } else {
+                        // no hay viajes disponibles
+                        Toast.makeText(getActivity().getApplicationContext(), "No hay viajes disponibles con los parámetros que especificaste", Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
+                if (array != null)
+                    Toast.makeText(getActivity().getApplicationContext(), "Hola3", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onStart() {
+                //Toast.makeText(getActivity().getApplicationContext(), "Hola4", Toast.LENGTH_LONG).show();
+                // show progress bar
+                showProgress(true);
+            }
+
+            @Override
+            public void onFinish() {
+                showProgress(false);
+            }
+
+            @Override
+            public void onRetry(int retryNo) {
+                //Toast.makeText(getActivity().getApplicationContext(), "Hola5", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
+                if (errorResponse != null) {
+                    Toast.makeText(getActivity().getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
+                    showNoInternet();
+                } else {
+                    showNoInternet();
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                if (responseString != null) {
+                    Toast.makeText(getActivity().getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
+                    showNoInternet();
+                } else {
+                    showNoInternet();
+                }
+            }
+        });
+    }
+
+    public void showNoInternet() {
+        /*CoordinatorLayout layout = (CoordinatorLayout) myView.findViewById(R.id.coordinatorLayoutMain);
+        Snackbar snackbar = Snackbar.make(layout, "No hay conexión a internet, es necesaria una conexión", Snackbar.LENGTH_INDEFINITE);
+        snackbar.show();*/
+        Toast.makeText(getActivity().getApplicationContext(), "No hay conexión a internet, es necesaria una conexión", Toast.LENGTH_LONG).show();
+    }
+
+    public void agregarViajeView(JSONObject viaje, int i) {
+        //final int id = idDinamico++;
+        LayoutInflater vi = (LayoutInflater) getActivity().getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = vi.inflate(R.layout.layout_viaje, null);
+        //v.setId(id);
+
+        TextView nombre = (TextView) v.findViewById(R.id.tv_nombre_content);
+        TextView origen = (TextView) v.findViewById(R.id.tv_origen_content);
+        TextView destino = (TextView) v.findViewById(R.id.tv_destino_content);
+        TextView fecha = (TextView) v.findViewById(R.id.tv_fecha_content);
+        TextView hora = (TextView) v.findViewById(R.id.tv_hora_content);
+
+        try {
+            nombre.setText(viaje.getString("nombre"));
+            origen.setText(viaje.getString("origen"));
+            destino.setText(viaje.getString("destino"));
+            fecha.setText(viaje.getString("fecha").replace('-', '/'));
+            hora.setText(viaje.getString("hora"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity().getApplicationContext(), "Viaje presionado", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // insert into main view
+        ViewGroup insertPoint = (ViewGroup) view.findViewById(R.id.ll_buscar_content);
+        insertPoint.addView(v, i, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+    }
+
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+            mViajesView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mViajesView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mViajesView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mViajesView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 }

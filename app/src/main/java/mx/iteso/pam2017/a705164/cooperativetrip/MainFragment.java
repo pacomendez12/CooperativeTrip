@@ -119,7 +119,9 @@ public class MainFragment extends android.app.Fragment {
                         int len = viajes.length();
                         for(int i = 0; i < len; i++) {
                             JSONObject viaje = viajes.getJSONObject(i).getJSONObject("datos");
-                            agregarViajeView(viaje, i);
+                            if (viaje != null) {
+                                agregarViajeView(viaje, i);
+                            }
                         }
                     }
                 } catch (JSONException e) {
