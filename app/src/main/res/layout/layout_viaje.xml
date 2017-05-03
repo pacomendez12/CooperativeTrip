@@ -80,7 +80,7 @@
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_weight=".3"
+            android:layout_weight=".34"
             android:layout_below="@id/tv_destino"
             android:layout_alignParentLeft="true"
             android:text="Fecha"
@@ -103,7 +103,7 @@
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.3"
+            android:layout_weight="0.34"
             android:layout_below="@id/tv_destino"
             android:layout_alignParentLeft="true"
             android:text="Hora"

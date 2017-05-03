@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -306,10 +307,7 @@ public class BuscarFragment extends Fragment implements DatePickerDialog.OnDateS
                         JSONArray viajes = response.getJSONArray("mensaje");
                         int len = viajes.length();
                         for(int i = 0; i < len; i++) {
-                            JSONObject viaje = viajes.getJSONObject(i).getJSONObject("datos");
-                            if (viaje != null) {
-                                agregarViajeView(viaje, i);
-                            }
+                                agregarViajeView(viajes.getJSONObject(i), i);
                         }
                     } else {
                         // no hay viajes disponibles
@@ -372,7 +370,7 @@ public class BuscarFragment extends Fragment implements DatePickerDialog.OnDateS
         Toast.makeText(getActivity().getApplicationContext(), "No hay conexión a internet, es necesaria una conexión", Toast.LENGTH_LONG).show();
     }
 
-    public void agregarViajeView(JSONObject viaje, int i) {
+    /*public void agregarViajeView(JSONObject viaje, int i) {
         //final int id = idDinamico++;
         LayoutInflater vi = (LayoutInflater) getActivity().getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = vi.inflate(R.layout.layout_viaje, null);
@@ -398,6 +396,96 @@ public class BuscarFragment extends Fragment implements DatePickerDialog.OnDateS
             @Override
             public void onClick(View v) {
                 Toast.makeText(getActivity().getApplicationContext(), "Viaje presionado", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // insert into main view
+        ViewGroup insertPoint = (ViewGroup) view.findViewById(R.id.ll_buscar_content);
+        insertPoint.addView(v, i, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+    }*/
+
+
+    public void agregarViajeView(JSONObject viajes, int i) throws JSONException {
+        final JSONObject data = viajes.getJSONObject("datos");
+        final JSONArray puntos_recoger;
+        if (!viajes.isNull("puntos_recoger"))
+            puntos_recoger = viajes.getJSONArray("puntos_recoger");
+        else
+            puntos_recoger = null;
+
+        final JSONArray puntos_intermedios;
+        if (!viajes.isNull("puntos_intermedios"))
+            puntos_intermedios = viajes.getJSONArray("puntos_intermedios");
+        else
+            puntos_intermedios = null;
+        final JSONObject usuario = viajes.getJSONObject("usuario");
+        final JSONObject vehiculo = viajes.getJSONObject("vehiculo");
+
+
+        if (data == null) return;
+        //final int id = idDinamico++;
+        LayoutInflater vi = (LayoutInflater) getActivity().getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = vi.inflate(R.layout.layout_viaje, null);
+        //v.setId(id);
+
+        TextView nombre = (TextView) v.findViewById(R.id.tv_nombre_content);
+        TextView origen = (TextView) v.findViewById(R.id.tv_origen_content);
+        TextView destino = (TextView) v.findViewById(R.id.tv_destino_content);
+        TextView fecha = (TextView) v.findViewById(R.id.tv_fecha_content);
+        TextView hora = (TextView) v.findViewById(R.id.tv_hora_content);
+
+        try {
+            nombre.setText(data.getString("nombre"));
+            origen.setText(data.getString("origen"));
+            destino.setText(data.getString("destino"));
+            fecha.setText(data.getString("fecha").replace('-', '/'));
+            hora.setText(data.getString("hora"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View vista) {
+                // Creando el objeto viaje
+                Viaje v = null;
+                try {
+                    String [] arrayPuntosRecoger = new String[puntos_recoger != null? puntos_recoger.length() : 0];
+                    for (int i = 0; i < arrayPuntosRecoger.length; i++) {
+                        JSONObject obj = puntos_recoger.getJSONObject(i);
+                        arrayPuntosRecoger[i] = obj.getString("lat") + "|" + obj.getString("lon");
+                    }
+
+                    String [] arrayPuntosIntermedios = new String[puntos_intermedios != null? puntos_intermedios.length() : 0];
+                    for (int i = 0; i < arrayPuntosIntermedios.length; i++) {
+                        JSONObject obj = puntos_intermedios.getJSONObject(i);
+                        arrayPuntosIntermedios[i] = obj.getString("nombre") + "|" + obj.getString("lat") + "|" + obj.getString("lon");
+                    }
+
+                    String [] datosUsuario = new String[5];
+                    datosUsuario[0] = usuario.getString("id_usuario");
+                    datosUsuario[1] = usuario.getString("correo");
+                    datosUsuario[2] = usuario.getString("telefono");
+                    datosUsuario[3] = usuario.getString("nombre");
+                    datosUsuario[4] = usuario.getString("apellido");
+
+                    String vehiculoStr = vehiculo.getString("sub_marca") + " - " + vehiculo.getString("placa");
+                    v = new Viaje(data.getString("nombre"), data.getString("origen"), data.getString("origen_lat"),
+                            data.getString("origen_lon"), data.getString("destino"), data.getString("destino_lat"),
+                            data.getString("destino_lon"), data.getString("fecha").replace('-', '/'),
+                            data.getString("hora"), vehiculoStr, data.getDouble("precio"),
+                            data.getInt("asientos"), data.getInt("asientos_libres"), data.getInt("id_viaje"),
+                            arrayPuntosRecoger, arrayPuntosIntermedios, datosUsuario);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                if (v == null) return;
+
+                //Toast.makeText(getActivity().getApplicationContext(), "Viaje presionado", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(getActivity().getApplicationContext(), MostrarViajeActivity.class);
+                intent.putExtra("viajeTag", v);
+                startActivity(intent);
             }
         });
 
