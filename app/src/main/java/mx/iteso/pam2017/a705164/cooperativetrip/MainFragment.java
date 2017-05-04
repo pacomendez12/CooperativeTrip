@@ -144,17 +144,25 @@ public class MainFragment extends android.app.Fragment {
 
             @Override
             public void onRetry(int retryNo) {
-                Toast.makeText(getActivity().getApplicationContext(), "Hola5", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getActivity().getApplicationContext(), "Hola5", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
-                Toast.makeText(getActivity().getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
+                if (errorResponse != null) {
+                    Toast.makeText(getActivity().getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getActivity().getApplicationContext(), "No hay conexion con el servidor, revise tu conexion", Toast.LENGTH_LONG).show();
+                }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                Toast.makeText(getActivity().getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
+                if (responseString != null) {
+                    Toast.makeText(getActivity().getApplicationContext(), responseString, Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getActivity().getApplicationContext(), "No hay conexion con el servidor, revise tu conexion", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }

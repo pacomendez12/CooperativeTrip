@@ -296,20 +296,24 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
-                    Log.e(TAG, errorResponse.toString());
+                    if (errorResponse != null) {
+                        Log.e(TAG, errorResponse.toString());
 
-                    try {
-                        int estado = errorResponse.getInt("estado");
-                        if (estado == 11) {
-                            //Toast.makeText(getApplicationContext(), "El usuario y/o la contrasena son invalidos", Toast.LENGTH_LONG).show();
-                            CoordinatorLayout coordinatorLayout = (CoordinatorLayout)findViewById(R.id.coordinatorLayout);
-                            Snackbar snackbar = Snackbar
-                                    .make(coordinatorLayout, "El usuario y/o la contrasena son invalidos", Snackbar.LENGTH_LONG);
+                        try {
+                            int estado = errorResponse.getInt("estado");
+                            if (estado == 11) {
+                                //Toast.makeText(getApplicationContext(), "El usuario y/o la contrasena son invalidos", Toast.LENGTH_LONG).show();
+                                CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
+                                Snackbar snackbar = Snackbar
+                                        .make(coordinatorLayout, "El usuario y/o la contrasena son invalidos", Snackbar.LENGTH_LONG);
 
-                            snackbar.show();
+                                snackbar.show();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "No hay conexion con el servidor, Revisa tu conexión", Toast.LENGTH_LONG).show();
                     }
 
                     showProgress(false);

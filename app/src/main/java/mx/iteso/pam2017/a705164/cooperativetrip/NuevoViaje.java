@@ -715,8 +715,8 @@ public class NuevoViaje extends Fragment implements TimePickerDialog.OnTimeSetLi
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
-                if (array != null)
-                    Toast.makeText(getActivity().getApplicationContext(), "Hola3", Toast.LENGTH_LONG).show();
+                /*if (array != null)
+                    Toast.makeText(getActivity().getApplicationContext(), "Hola3", Toast.LENGTH_LONG).show();*/
             }
 
             @Override
@@ -732,8 +732,8 @@ public class NuevoViaje extends Fragment implements TimePickerDialog.OnTimeSetLi
             @Override
             public void onFailure(int statusCode, Header[] headers, java.lang.Throwable throwable, JSONObject errorResponse) {
                 if (errorResponse != null) {
-                    Toast.makeText(getActivity().getApplicationContext(), errorResponse.toString(), Toast.LENGTH_LONG).show();
-                    showNoInternet();
+                    Toast.makeText(getActivity().getApplicationContext(), "No existe vehiculos registrados", Toast.LENGTH_LONG).show();
+                    //showNoInternet();
                 } else {
                     showNoInternet();
                 }

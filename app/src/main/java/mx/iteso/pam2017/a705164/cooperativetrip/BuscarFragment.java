@@ -407,6 +407,9 @@ public class BuscarFragment extends Fragment implements DatePickerDialog.OnDateS
 
     public void agregarViajeView(JSONObject viajes, int i) throws JSONException {
         final JSONObject data = viajes.getJSONObject("datos");
+
+        if (data.getInt("asientos_libres") <= 0)
+            return;
         final JSONArray puntos_recoger;
         if (!viajes.isNull("puntos_recoger"))
             puntos_recoger = viajes.getJSONArray("puntos_recoger");

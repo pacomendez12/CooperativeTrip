@@ -12,24 +12,26 @@ import cz.msebera.android.httpclient.entity.StringEntity;
  */
 
 public class RestClient {
-    private static final String BASE_URL = "http://192.168.15.210/";
+    //private static final String BASE_URL = "http://192.168.15.210/";
+    private static final String BASE_URL = "http://148.201.186.50/";
     //private static final String BASE_URL = "https://api.twitter.com/1.1/";
 
     private static AsyncHttpClient client = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.addHeader("Authorization", AuthenticationManager.getKey());
-        client.setMaxRetriesAndTimeout(1, 3000);
+        client.setMaxRetriesAndTimeout(1, 2000);
         client.get(getAbsoluteUrl(url), params, responseHandler);
     }
 
     public static void post(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.addHeader("Authorization", AuthenticationManager.getKey());
-        client.setMaxRetriesAndTimeout(1, 3000);
+        client.setMaxRetriesAndTimeout(1, 2000);
         client.post(getAbsoluteUrl(url), params, responseHandler);
     }
 
     public static void post(Context contex, String url, StringEntity entity, AsyncHttpResponseHandler responseHandler) {
+        client.setMaxRetriesAndTimeout(1, 3000);
         client.post(contex, url, entity, "application/json", responseHandler);
     }
 
